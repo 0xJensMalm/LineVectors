@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Line Vectors</title>
+    <title>LineSegments with Compact Controls</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <style>
         body {
@@ -22,12 +22,18 @@
             margin-right: 20px;
         }
 
-        #control-panel {
+        #control-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-panel {
             background-color: #404040;
             padding: 15px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
             font-size: 12px;
+            margin-bottom: 15px;
         }
 
         .control-group {
@@ -35,23 +41,6 @@
             display: flex;
             align-items: center;
         }
-
-        .button-group {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .small-button {
-            width: 48%;
-            padding: 5px;
-            margin-top: 10px;
-            background-color: #FFD700;
-            color: #282828;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
 
         label {
             flex: 1;
@@ -70,8 +59,13 @@
             color: #FFD700;
         }
 
-        #reset-button {
-            width: 100%;
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .small-button {
+            width: 48%;
             padding: 5px;
             margin-top: 10px;
             background-color: #FFD700;
@@ -80,47 +74,24 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
+        .preset-button {
+            width: 100%;
+            padding: 5px;
+            margin: 5px 0;
+            background-color: #FFD700;
+            color: #282828;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
     </style>
 </head>
 
 <body>
     <div id="sketch-container"></div>
-    <div id="control-panel">
-        <div class="control-group">
-            <label for="numLines">Lines: <span id="numLinesValue">100</span></label>
-            <input type="range" id="numLines" min="0" max="150" value="100">
-            <input type="number" id="numLinesManual" value="100">
-        </div>
-        <div class="control-group">
-            <label for="numSegments">Segments: <span id="numSegmentsValue">50</span></label>
-            <input type="range" id="numSegments" min="1" max="50" value="50">
-            <input type="number" id="numSegmentsManual" value="50">
-        </div>
-        <div class="control-group">
-            <label for="segmentLength">Length: <span id="segmentLengthValue">70</span></label>
-            <input type="range" id="segmentLength" min="0" max="100" value="70">
-            <input type="number" id="segmentLengthManual" value="70">
-        </div>
-        <div class="control-group">
-            <label for="gap">Gap: <span id="gapValue">1</span></label>
-            <input type="range" id="gap" min="0" max="30" value="1">
-            <input type="number" id="gapManual" value="1">
-        </div>
-        <div class="control-group">
-            <label for="flowSpeed">Flow: <span id="flowSpeedValue">0.001</span></label>
-            <input type="range" id="flowSpeed" min="0.0001" max="0.01" step="0.0001" value="0.001">
-            <input type="number" id="flowSpeedManual" value="0.001" step="0.0001">
-        </div>
-        <div class="control-group">
-            <label for="noiseScale">Noise: <span id="noiseScaleValue">0.001</span></label>
-            <input type="range" id="noiseScale" min="0.0005" max="0.01" step="0.0001" value="0.001">
-            <input type="number" id="noiseScaleManual" value="0.001" step="0.0001">
-        </div>
-        <div class="button-group">
-            <button id="reset-button" class="small-button">Reset</button>
-            <button id="log-button" class="small-button">Log</button>
-        </div>
-    </div>
+    <div id="control-container"></div>
     <script src="sketch.js"></script>
 </body>
 
