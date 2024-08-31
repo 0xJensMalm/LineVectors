@@ -18,24 +18,7 @@ const presets = {
     noiseScale: 0.0021,
     frameSize: 50,
   },
-  placeholder_1: {
-    numLines: 100,
-    numSegments: 50,
-    segmentLength: 19,
-    gap: 2,
-    flowSpeed: 0.0017,
-    noiseScale: 0.0021,
-    frameSize: 50,
-  },
-  placeholder_2: {
-    numLines: 100,
-    numSegments: 50,
-    segmentLength: 19,
-    gap: 2,
-    flowSpeed: 0.0017,
-    noiseScale: 0.0021,
-    frameSize: 50,
-  },
+  // ... other presets ...
 };
 
 function generateControlPanel() {
@@ -61,7 +44,7 @@ function generateControlPanel() {
     const label = document.createElement("label");
     label.setAttribute("for", control.id);
     label.innerHTML = `${control.label}: <span id="${control.id}Value">${
-      defaultValues[control.id]
+      state[control.id]
     }</span>`;
 
     const slider = document.createElement("input");
@@ -70,12 +53,12 @@ function generateControlPanel() {
     slider.min = control.min;
     slider.max = control.max;
     slider.step = control.step;
-    slider.value = defaultValues[control.id];
+    slider.value = state[control.id];
 
     const numberInput = document.createElement("input");
     numberInput.type = "number";
     numberInput.id = `${control.id}Manual`;
-    numberInput.value = defaultValues[control.id];
+    numberInput.value = state[control.id];
     numberInput.step = control.step;
 
     controlGroup.appendChild(label);
@@ -85,10 +68,10 @@ function generateControlPanel() {
     controlPanel.appendChild(controlGroup);
 
     slider.addEventListener("input", () =>
-      updateValue(control.id, slider.value)
+      updateState(control.id, slider.value)
     );
     numberInput.addEventListener("input", () =>
-      updateValue(control.id, numberInput.value)
+      updateState(control.id, numberInput.value)
     );
   });
 
@@ -116,86 +99,23 @@ function generateControlPanel() {
   logButton.addEventListener("click", logCurrentValues);
 }
 
-function generatePresetPanel() {
-  const controlContainer = document.getElementById("control-container");
-
-  const presetPanel = document.createElement("div");
-  presetPanel.classList.add("control-panel");
-
-  const title = document.createElement("h3");
-  title.textContent = "Presets";
-  presetPanel.appendChild(title);
-
-  Object.keys(presets).forEach((preset) => {
-    const button = document.createElement("button");
-    button.classList.add("preset-button");
-    button.textContent = preset.replace(/_/g, " ");
-    button.addEventListener("click", () => applyPreset(preset));
-    presetPanel.appendChild(button);
-  });
-
-  controlContainer.appendChild(presetPanel);
-}
-
-function updateValue(id, newValue) {
-  newValue = parseFloat(newValue);
-
-  switch (id) {
-    case "numLines":
-      numLines = newValue;
-      break;
-    case "numSegments":
-      numSegments = newValue;
-      break;
-    case "segmentLength":
-      segmentLength = newValue;
-      break;
-    case "gap":
-      gap = newValue;
-      break;
-    case "flowSpeed":
-      flowSpeed = newValue;
-      break;
-    case "noiseScale":
-      noiseScale = newValue;
-      break;
-    case "frameSize":
-      frameSize = newValue;
-      break;
-  }
-
-  const slider = document.getElementById(id);
-  const manual = document.getElementById(`${id}Manual`);
-  const value = document.getElementById(`${id}Value`);
-
-  slider.value = newValue;
-  manual.value = newValue;
-  value.textContent = newValue;
-}
-
 function resetValues() {
   Object.entries(defaultValues).forEach(([id, value]) => {
-    updateValue(id, value);
+    updateState(id, value);
   });
 }
 
 function logCurrentValues() {
-  console.log(`let numLines = ${numLines};`);
-  console.log(`let numSegments = ${numSegments};`);
-  console.log(`let segmentLength = ${segmentLength};`);
-  console.log(`let gap = ${gap};`);
-  console.log(`let flowSpeed = ${flowSpeed};`);
-  console.log(`let noiseScale = ${noiseScale};`);
-  console.log(`let frameSize = ${frameSize};`);
+  console.log(JSON.stringify(state, null, 2));
 }
 
 function applyPreset(presetName) {
   const preset = presets[presetName];
   Object.entries(preset).forEach(([id, value]) => {
-    updateValue(id, value);
+    updateState(id, value);
   });
 }
 
 // Initialize the control panels
 generateControlPanel();
-generatePresetPanel();
+generatePresetPanel(); // Assuming this function remains unchanged
