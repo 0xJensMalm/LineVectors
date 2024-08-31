@@ -4,7 +4,12 @@ let segmentLength = 20; // Initial segment length
 let gap = 5; // Initial gap between segments
 let flowSpeed = 0.001;
 let noiseScale = 0.001;
-let frameSize = 50; // Frame size around the canvas
+let frameSize = 50; // Dynamic frame size to keep lines from crossing
+
+// Color settings in hex
+let bgColor = "#282828"; // Background color
+let lineColor = "#FFFF00"; // Line color (yellow)
+let outlineColor = "#FFFFFF"; // Static outline color (white)
 
 function setup() {
   // Calculate canvas size
@@ -16,7 +21,6 @@ function setup() {
   let canvas = createCanvas(canvasWidth, canvasHeight);
   canvas.parent("sketch-container");
 
-  stroke(255, 255, 0);
   strokeWeight(2);
 
   adjustParameters(); // Adjust parameters based on canvas size
@@ -32,15 +36,17 @@ function windowResized() {
 }
 
 function draw() {
-  background(40, 40, 40);
+  background(bgColor); // Use the background color variable
 
-  // Draw frame
+  // Draw static white outline around the canvas
   noFill();
-  stroke(200);
-  strokeWeight(2);
-  rect(frameSize / 2, frameSize / 2, width - frameSize, height - frameSize);
+  stroke(outlineColor); // Use the outline color variable
+  strokeWeight(4); // Thicker outline
+  rect(0, 0, width, height); // Outline at the very edge of the canvas
 
   let lineSpacing = (width - frameSize) / (numLines + 1);
+
+  stroke(lineColor); // Use the line color variable
 
   for (let i = 1; i <= numLines; i++) {
     let x = frameSize / 2 + lineSpacing * i;
@@ -59,7 +65,7 @@ function drawLineSegments(x, lineIndex) {
     let x2 = x + segmentLength * cos(angle);
     let y2_rotated = y1 + segmentLength * sin(angle);
 
-    // Ensure the line segment stays within the frame
+    // Ensure the line segment stays within the invisible dynamic frame
     x2 = constrain(x2, frameSize / 2, width - frameSize / 2);
     y2_rotated = constrain(y2_rotated, frameSize / 2, height - frameSize / 2);
 
