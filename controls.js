@@ -18,7 +18,24 @@ const presets = {
     noiseScale: 0.0021,
     frameSize: 50,
   },
-  // ... other presets ...
+  tilework: {
+    numLines: 100,
+    numSegments: 50,
+    segmentLength: 6,
+    gap: 2,
+    flowSpeed: 0.0037,
+    noiseScale: 0.0081,
+    frameSize: 50,
+  },
+  placeholder_2: {
+    numLines: 100,
+    numSegments: 50,
+    segmentLength: 19,
+    gap: 2,
+    flowSpeed: 0.0017,
+    noiseScale: 0.0021,
+    frameSize: 50,
+  },
 };
 
 function generateControlPanel() {
@@ -44,7 +61,7 @@ function generateControlPanel() {
     const label = document.createElement("label");
     label.setAttribute("for", control.id);
     label.innerHTML = `${control.label}: <span id="${control.id}Value">${
-      state[control.id]
+      defaultValues[control.id]
     }</span>`;
 
     const slider = document.createElement("input");
@@ -53,12 +70,12 @@ function generateControlPanel() {
     slider.min = control.min;
     slider.max = control.max;
     slider.step = control.step;
-    slider.value = state[control.id];
+    slider.value = defaultValues[control.id];
 
     const numberInput = document.createElement("input");
     numberInput.type = "number";
     numberInput.id = `${control.id}Manual`;
-    numberInput.value = state[control.id];
+    numberInput.value = defaultValues[control.id];
     numberInput.step = control.step;
 
     controlGroup.appendChild(label);
@@ -68,10 +85,10 @@ function generateControlPanel() {
     controlPanel.appendChild(controlGroup);
 
     slider.addEventListener("input", () =>
-      updateState(control.id, slider.value)
+      updateValue(control.id, slider.value)
     );
     numberInput.addEventListener("input", () =>
-      updateState(control.id, numberInput.value)
+      updateValue(control.id, numberInput.value)
     );
   });
 
@@ -99,23 +116,168 @@ function generateControlPanel() {
   logButton.addEventListener("click", logCurrentValues);
 }
 
+function generateColorControlPanel() {
+  const controlContainer = document.getElementById("control-container");
+
+  const colorPanel = document.createElement("div");
+  colorPanel.classList.add("control-panel");
+
+  const title = document.createElement("h3");
+  title.textContent = "Color Modes";
+  colorPanel.appendChild(title);
+
+  const colorModes = ["Standard", "AngleGradient", "Noise"];
+  colorModes.forEach((mode, index) => {
+    const controlGroup = document.createElement("div");
+    controlGroup.classList.add("control-group");
+
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.id = `colorMode-${mode}`;
+    radio.name = "colorMode";
+    radio.value = mode;
+    radio.checked = index === 0; // Default to Standard mode
+
+    const label = document.createElement("label");
+    label.setAttribute("for", `colorMode-${mode}`);
+    label.textContent = mode;
+
+    controlGroup.appendChild(radio);
+    controlGroup.appendChild(label);
+    colorPanel.appendChild(controlGroup);
+
+    radio.addEventListener("change", () => updateColorMode(mode));
+  });
+
+  // Add theme selection buttons for Standard mode
+  const themeGroup = document.createElement("div");
+  themeGroup.classList.add("control-group");
+  themeGroup.id = "theme-group";
+
+  const themes = [
+    { id: "theme1", colors: ["#FFFF00", "#FFA500", "#FF4500"] }, // Example theme
+    { id: "theme2", colors: ["#00FFFF", "#0000FF", "#8A2BE2"] },
+    { id: "theme3", colors: ["#ADFF2F", "#7FFF00", "#32CD32"] },
+  ];
+
+  themes.forEach((theme) => {
+    const button = document.createElement("button");
+    button.classList.add("small-button"); // Use the same styling as the reset/log buttons
+    button.style.background = `linear-gradient(to right, ${theme.colors.join(
+      ","
+    )})`;
+    button.addEventListener("click", () => applyTheme(theme.colors));
+    themeGroup.appendChild(button);
+  });
+
+  colorPanel.appendChild(themeGroup);
+  controlContainer.appendChild(colorPanel);
+
+  updateColorMode("Standard"); // Initialize with Standard mode
+}
+
+function generatePresetPanel() {
+  const controlContainer = document.getElementById("control-container");
+
+  const presetPanel = document.createElement("div");
+  presetPanel.classList.add("control-panel");
+
+  const title = document.createElement("h3");
+  title.textContent = "Presets";
+  presetPanel.appendChild(title);
+
+  Object.keys(presets).forEach((preset) => {
+    const button = document.createElement("button");
+    button.classList.add("preset-button");
+    button.textContent = preset.replace(/_/g, " ");
+    button.addEventListener("click", () => applyPreset(preset));
+    presetPanel.appendChild(button);
+  });
+
+  controlContainer.appendChild(presetPanel);
+}
+
+function updateColorMode(mode) {
+  // Update global variable for color mode
+  colorMode = mode;
+
+  // Show or hide themeGroup based on selected mode
+  const themeGroup = document.getElementById("theme-group");
+  if (mode === "Standard") {
+    themeGroup.style.display = "flex";
+  } else {
+    themeGroup.style.display = "none";
+  }
+}
+
+function applyTheme(colors) {
+  // Apply the selected theme colors to the lines
+  themeColors = colors;
+}
+
+function updateValue(id, newValue) {
+  newValue = parseFloat(newValue);
+
+  switch (id) {
+    case "numLines":
+      numLines = newValue;
+      break;
+    case "numSegments":
+      numSegments = newValue;
+      break;
+    case "segmentLength":
+      segmentLength = newValue;
+      break;
+    case "gap":
+      gap = newValue;
+      break;
+    case "flowSpeed":
+      flowSpeed = newValue;
+      break;
+    case "noiseScale":
+      noiseScale = newValue;
+      break;
+    case "frameSize":
+      frameSize = newValue;
+      break;
+  }
+
+  const slider = document.getElementById(id);
+  const manual = document.getElementById(`${id}Manual`);
+  const value = document.getElementById(`${id}Value`);
+
+  slider.value = newValue;
+  manual.value = newValue;
+  value.textContent = newValue;
+}
+
 function resetValues() {
   Object.entries(defaultValues).forEach(([id, value]) => {
-    updateState(id, value);
+    updateValue(id, value);
   });
 }
 
 function logCurrentValues() {
-  console.log(JSON.stringify(state, null, 2));
+  const logString = `
+    numLines: ${numLines},
+    numSegments: ${numSegments},
+    segmentLength: ${segmentLength},
+    gap: ${gap},
+    flowSpeed: ${flowSpeed},
+    noiseScale: ${noiseScale},
+    frameSize: ${frameSize},
+    `;
+  console.log(logString);
 }
 
 function applyPreset(presetName) {
   const preset = presets[presetName];
   Object.entries(preset).forEach(([id, value]) => {
-    updateState(id, value);
+    updateValue(id, value);
   });
 }
 
-// Initialize the control panels
+// Initialize all control panels
 generateControlPanel();
-generatePresetPanel(); // Assuming this function remains unchanged
+generatePresetPanel();
+generateColorControlPanel();
