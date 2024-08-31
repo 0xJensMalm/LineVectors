@@ -1,232 +1,85 @@
-let numLines = 100;
-let numSegments = 50;
-let segmentLength = 70;
-let gap = 1;
+let numLines = 10; // Initial number of lines
+let numSegments = 1; // Initial number of segments per line
+let segmentLength = 20; // Initial segment length
+let gap = 5; // Initial gap between segments
 let flowSpeed = 0.001;
 let noiseScale = 0.001;
-
-const defaultValues = {
-  numLines: 100,
-  numSegments: 50,
-  segmentLength: 70,
-  gap: 1,
-  flowSpeed: 0.001,
-  noiseScale: 0.001,
-};
-
-const presets = {
-  tight_noise: {
-    numLines: 100,
-    numSegments: 50,
-    segmentLength: 19,
-    gap: 2,
-    flowSpeed: 0.0017,
-    noiseScale: 0.0021,
-  },
-  placeholder_1: {
-    numLines: 100,
-    numSegments: 50,
-    segmentLength: 19,
-    gap: 2,
-    flowSpeed: 0.0017,
-    noiseScale: 0.0021,
-  },
-  placeholder_2: {
-    numLines: 100,
-    numSegments: 50,
-    segmentLength: 19,
-    gap: 2,
-    flowSpeed: 0.0017,
-    noiseScale: 0.0021,
-  },
-};
+let frameSize = 50; // Frame size around the canvas
 
 function setup() {
-  let canvas = createCanvas(800, 800);
+  // Calculate canvas size
+  const controlPanelWidth =
+    document.getElementById("control-container").offsetWidth;
+  const canvasWidth = windowWidth - controlPanelWidth - 40; // 40px padding/margin
+  const canvasHeight = windowHeight - 20; // 20px padding/margin
+
+  let canvas = createCanvas(canvasWidth, canvasHeight);
   canvas.parent("sketch-container");
 
   stroke(255, 255, 0);
   strokeWeight(2);
 
-  generateControlPanel();
-  generatePresetPanel();
+  adjustParameters(); // Adjust parameters based on canvas size
+}
+
+function windowResized() {
+  const controlPanelWidth =
+    document.getElementById("control-container").offsetWidth;
+  const canvasWidth = windowWidth - controlPanelWidth - 40; // 40px padding/margin
+  const canvasHeight = windowHeight - 20; // 20px padding/margin
+  resizeCanvas(canvasWidth, canvasHeight);
+  adjustParameters(); // Re-adjust parameters when the window is resized
 }
 
 function draw() {
   background(40, 40, 40);
 
-  let lineSpacing = width / (numLines + 1);
+  // Draw frame
+  noFill();
+  stroke(200);
+  strokeWeight(2);
+  rect(frameSize / 2, frameSize / 2, width - frameSize, height - frameSize);
+
+  let lineSpacing = (width - frameSize) / (numLines + 1);
 
   for (let i = 1; i <= numLines; i++) {
-    let x = lineSpacing * i;
+    let x = frameSize / 2 + lineSpacing * i;
     drawLineSegments(x, i);
   }
 }
 
 function drawLineSegments(x, lineIndex) {
-  for (let j = 0; j < numSegments; j++) {
-    let y1 = j * (segmentLength + gap);
-    let y2 = y1 + segmentLength;
+  const segmentSpacing = (height - frameSize) / (numSegments + 1);
 
+  for (let j = 1; j <= numSegments; j++) {
+    let y1 = frameSize / 2 + segmentSpacing * j;
     let angle =
       noise(x * noiseScale, y1 * noiseScale, frameCount * flowSpeed) * TWO_PI;
 
     let x2 = x + segmentLength * cos(angle);
     let y2_rotated = y1 + segmentLength * sin(angle);
 
+    // Ensure the line segment stays within the frame
+    x2 = constrain(x2, frameSize / 2, width - frameSize / 2);
+    y2_rotated = constrain(y2_rotated, frameSize / 2, height - frameSize / 2);
+
     line(x, y1, x2, y2_rotated);
   }
 }
 
-function generateControlPanel() {
-  const controlContainer = document.getElementById("control-container");
+function adjustParameters() {
+  // Logic to constrain and adjust parameters based on available canvas size
+  const availableWidth = width - frameSize;
+  const availableHeight = height - frameSize;
 
-  const controlPanel = document.createElement("div");
-  controlPanel.classList.add("control-panel");
+  // Dynamically adjust segment length to ensure it fits within the width
+  segmentLength = min(segmentLength, availableWidth / 2 - gap);
 
-  const controls = [
-    { id: "numLines", min: 0, max: 150, step: 1, label: "Lines" },
-    { id: "numSegments", min: 1, max: 50, step: 1, label: "Segments" },
-    { id: "segmentLength", min: 0, max: 100, step: 1, label: "Length" },
-    { id: "gap", min: 0, max: 30, step: 1, label: "Gap" },
-    { id: "flowSpeed", min: 0.0001, max: 0.01, step: 0.0001, label: "Flow" },
-    { id: "noiseScale", min: 0.0005, max: 0.01, step: 0.0001, label: "Noise" },
-  ];
+  // Adjust gap dynamically if needed
+  gap = constrain(gap, 0, availableHeight / numSegments - segmentLength);
 
-  controls.forEach((control) => {
-    const controlGroup = document.createElement("div");
-    controlGroup.classList.add("control-group");
-
-    const label = document.createElement("label");
-    label.setAttribute("for", control.id);
-    label.innerHTML = `${control.label}: <span id="${control.id}Value">${
-      defaultValues[control.id]
-    }</span>`;
-
-    const slider = document.createElement("input");
-    slider.type = "range";
-    slider.id = control.id;
-    slider.min = control.min;
-    slider.max = control.max;
-    slider.step = control.step;
-    slider.value = defaultValues[control.id];
-
-    const numberInput = document.createElement("input");
-    numberInput.type = "number";
-    numberInput.id = `${control.id}Manual`;
-    numberInput.value = defaultValues[control.id];
-    numberInput.step = control.step;
-
-    controlGroup.appendChild(label);
-    controlGroup.appendChild(slider);
-    controlGroup.appendChild(numberInput);
-
-    controlPanel.appendChild(controlGroup);
-
-    slider.addEventListener("input", () =>
-      updateValue(control.id, slider.value)
-    );
-    numberInput.addEventListener("input", () =>
-      updateValue(control.id, numberInput.value)
-    );
-  });
-
-  const buttonGroup = document.createElement("div");
-  buttonGroup.classList.add("button-group");
-
-  const resetButton = document.createElement("button");
-  resetButton.id = "reset-button";
-  resetButton.classList.add("small-button");
-  resetButton.textContent = "Reset";
-
-  const logButton = document.createElement("button");
-  logButton.id = "log-button";
-  logButton.classList.add("small-button");
-  logButton.textContent = "Log";
-
-  buttonGroup.appendChild(resetButton);
-  buttonGroup.appendChild(logButton);
-
-  controlPanel.appendChild(buttonGroup);
-
-  controlContainer.appendChild(controlPanel);
-
-  resetButton.addEventListener("click", resetValues);
-  logButton.addEventListener("click", logCurrentValues);
-}
-
-function generatePresetPanel() {
-  const controlContainer = document.getElementById("control-container");
-
-  const presetPanel = document.createElement("div");
-  presetPanel.classList.add("control-panel");
-
-  const title = document.createElement("h3");
-  title.textContent = "Presets";
-  presetPanel.appendChild(title);
-
-  Object.keys(presets).forEach((preset) => {
-    const button = document.createElement("button");
-    button.classList.add("preset-button");
-    button.textContent = preset.replace(/_/g, " ");
-    button.addEventListener("click", () => applyPreset(preset));
-    presetPanel.appendChild(button);
-  });
-
-  controlContainer.appendChild(presetPanel);
-}
-
-function updateValue(id, newValue) {
-  newValue = parseFloat(newValue);
-
-  switch (id) {
-    case "numLines":
-      numLines = newValue;
-      break;
-    case "numSegments":
-      numSegments = newValue;
-      break;
-    case "segmentLength":
-      segmentLength = newValue;
-      break;
-    case "gap":
-      gap = newValue;
-      break;
-    case "flowSpeed":
-      flowSpeed = newValue;
-      break;
-    case "noiseScale":
-      noiseScale = newValue;
-      break;
+  // Adjust segmentLength if it overflows the available height
+  if ((segmentLength + gap) * numSegments > availableHeight) {
+    segmentLength = availableHeight / numSegments - gap;
   }
-
-  const slider = document.getElementById(id);
-  const manual = document.getElementById(`${id}Manual`);
-  const value = document.getElementById(`${id}Value`);
-
-  slider.value = newValue;
-  manual.value = newValue;
-  value.textContent = newValue;
-}
-
-function resetValues() {
-  Object.entries(defaultValues).forEach(([id, value]) => {
-    updateValue(id, value);
-  });
-}
-
-function logCurrentValues() {
-  console.log(`let numLines = ${numLines};`);
-  console.log(`let numSegments = ${numSegments};`);
-  console.log(`let segmentLength = ${segmentLength};`);
-  console.log(`let gap = ${gap};`);
-  console.log(`let flowSpeed = ${flowSpeed};`);
-  console.log(`let noiseScale = ${noiseScale};`);
-}
-
-function applyPreset(presetName) {
-  const preset = presets[presetName];
-  Object.entries(preset).forEach(([id, value]) => {
-    updateValue(id, value);
-  });
 }
